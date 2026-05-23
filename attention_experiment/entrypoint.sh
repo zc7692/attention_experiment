@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+set -eu
+
+export HOST="${HOST:-0.0.0.0}"
+export PORT="${PORT:-8000}"
+export DATA_DIR="${DATA_DIR:-/data}"
+
+exec python server.py

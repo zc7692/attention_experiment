@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: attention-experiment
+    env: python
+    plan: starter
+    buildCommand: "python -m compileall server.py export_csv.py"
+    startCommand: python server.py
+    autoDeploy: false
+    healthCheckPath: /api/ping
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 10000
+      - key: DATA_DIR
+        value: /var/data
+    disk:
+      name: attention-experiment-data
+      mountPath: /var/data
+      sizeGB: 1

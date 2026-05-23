@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>注意力与算法强度行为实验平台</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Formal Data Collection Version</p>
+          <h1>注意力与算法强度行为实验平台</h1>
+          <p class="topbar-note">本页面用于正式收集被试在不同推荐算法强度条件下的浏览行为与主观感受数据。</p>
+        </div>
+        <div id="runtimeBadge" class="runtime-badge hidden" aria-live="polite">
+          <div>
+            <span>有效浏览剩余时间</span>
+            <strong id="timerText">20:00</strong>
+          </div>
+          <div class="runtime-divider"></div>
+          <div>
+            <span>离开页面累计</span>
+            <strong id="inactiveText">00:00</strong>
+          </div>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section id="introScreen" class="panel intro-panel">
+          <div class="paper-card">
+            <h2>实验说明与知情同意</h2>
+            <p>
+              本实验用于研究推荐算法强度对个体注意力分配、持续浏览倾向、主观时间知觉与自主控制感的影响。你将进入一个模拟信息流环境进行浏览，系统仅记录匿名行为数据与问卷回答，不采集身份证号、手机号等敏感身份信息。
+            </p>
+            <p>
+              正式实验以“有效浏览时长”计时，共需 20 分钟。若页面被切走、最小化或失去焦点，实验会自动暂停，并累计记录离开页面时长。为保证数据质量，请尽量在电脑端、安静环境下独立完成，不要中途切换到其他网页或应用。
+            </p>
+            <p>
+              参与本实验完全出于自愿，你可以在开始前退出。若你同意参与，请填写下列信息并勾选同意选项后开始。
+            </p>
+
+            <div id="deviceNotice" class="notice-box">
+              建议使用电脑端浏览器完成实验。当前版本默认不接受手机端正式作答，以保证实验条件一致。
+            </div>
+
+            <form id="startForm" class="start-form">
+              <label>
+                被试编号
+                <input
+                  type="text"
+                  id="participantCode"
+                  name="participantCode"
+                  placeholder="如研究者已分配编号，请在此填写；未填写将自动生成匿名编号"
+                />
+              </label>
+
+              <label>
+                年龄段
+                <select id="ageGroup" name="ageGroup" required>
+                  <option value="">请选择</option>
+                  <option value="18-24">18-24 岁</option>
+                  <option value="25-30">25-30 岁</option>
+                  <option value="31-40">31-40 岁</option>
+                  <option value="41+">41 岁及以上</option>
+                </select>
+              </label>
+
+              <label>
+                性别
+                <select id="gender" name="gender">
+                  <option value="">可不填写</option>
+                  <option value="female">女</option>
+                  <option value="male">男</option>
+                  <option value="nonbinary">其他</option>
+                  <option value="prefer_not_to_say">不愿透露</option>
+                </select>
+              </label>
+
+              <label>
+                你是否已满 18 周岁
+                <select id="adultCheck" name="adultCheck" required>
+                  <option value="">请选择</option>
+                  <option value="yes">是</option>
+                  <option value="no">否</option>
+                </select>
+              </label>
+
+              <label class="check-block">
+                <span>我已阅读实验说明，理解本研究将匿名记录浏览行为与问卷回答。</span>
+                <div class="consent-row">
+                  <input type="checkbox" id="consent" name="consent" required />
+                  <span>我同意参与本研究</span>
+                </div>
+              </label>
+
+              <label class="check-block">
+                <span>我确认将尽量在实验过程中保持页面处于当前窗口，并独立完成实验。</span>
+                <div class="consent-row">
+                  <input type="checkbox" id="focusConsent" name="focusConsent" required />
+                  <span>我理解离开页面将导致实验暂停并被记录</span>
+                </div>
+              </label>
+
+              <button type="submit" class="primary-button">进入正式实验</button>
+              <p id="startError" class="form-error hidden" role="alert"></p>
+            </form>
+          </div>
+        </section>
+
+        <section id="experimentScreen" class="hidden experiment-grid">
+          <aside class="side-panel">
+            <div class="paper-card compact">
+              <h2>实验提示</h2>
+              <p>
+                请像平时浏览推荐内容一样自然地阅读。你可以自由滚动、展开全文、收藏内容或继续查看类似内容。系统不会向你显示实验分组信息。
+              </p>
+            </div>
+
+            <div class="paper-card compact">
+              <h2>过程记录</h2>
+              <dl class="stats">
+                <div>
+                  <dt>已浏览卡片</dt>
+                  <dd id="cardsSeenStat">0</dd>
+                </div>
+                <div>
+                  <dt>展开次数</dt>
+                  <dd id="cardsOpenedStat">0</dd>
+                </div>
+                <div>
+                  <dt>收藏次数</dt>
+                  <dd id="bookmarksStat">0</dd>
+                </div>
+                <div>
+                  <dt>有效浏览时长</dt>
+                  <dd id="activeElapsedStat">00:00</dd>
+                </div>
+              </dl>
+            </div>
+          </aside>
+
+          <section class="feed-panel">
+            <div class="feed-head">
+              <div>
+                <p class="eyebrow">Simulated Recommendation Feed</p>
+                <h2>信息流浏览区</h2>
+              </div>
+              <button id="loadMoreButton" class="secondary-button" type="button">加载更多内容</button>
+            </div>
+            <div id="feedList" class="feed-list" aria-live="polite"></div>
+          </section>
+        </section>
+
+        <section id="completeScreen" class="panel hidden">
+          <div class="paper-card">
+            <h2>实验已完成</h2>
+            <p id="completionMessage">
+              你的问卷已提交。请将页面显示的完成码记录给研究者，以便核验。
+            </p>
+            <p id="receiptBox" class="receipt-box hidden"></p>
+            <div class="button-row">
+              <button id="downloadDataButton" class="secondary-button" type="button">下载 JSON 备份</button>
+              <button id="restartButton" class="primary-button" type="button">重新开始新一轮实验</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="detailDialog" class="detail-dialog">
+      <article class="detail-card">
+        <div class="detail-head">
+          <span id="detailCategory" class="category-tag"></span>
+          <button id="closeDetailButton" class="icon-button" type="button" aria-label="关闭详情">×</button>
+        </div>
+        <h3 id="detailTitle"></h3>
+        <p id="detailMeta" class="detail-meta"></p>
+        <div id="detailBody" class="detail-body"></div>
+      </article>
+    </dialog>
+
+    <div id="pauseOverlay" class="pause-overlay hidden" aria-live="assertive">
+      <div class="pause-card">
+        <h2>实验已暂停</h2>
+        <p>检测到页面已失去焦点。请返回当前页面后继续，实验只统计有效浏览时间。</p>
+      </div>
+    </div>
+
+    <div id="surveyOverlay" class="survey-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="surveyTitle">
+      <form id="surveyForm" class="survey-card">
+        <p class="eyebrow">Post-Exposure Questionnaire</p>
+        <h2 id="surveyTitle">浏览阶段结束，请完成实验问卷</h2>
+        <p class="survey-intro">
+          你已经完成 20 分钟有效浏览。请根据刚才的真实体验作答。问卷提交后，系统将保存行为数据与问卷结果，并生成一条完成码。
+        </p>
+
+        <label>
+          我感到平台推荐的内容与我的兴趣较为贴合。
+          <select name="fit" required>
+            <option value="">请选择</option>
+            <option value="1">1 非常不同意</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4 一般</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7 非常同意</option>
+          </select>
+        </label>
+
+        <label>
+          在浏览过程中，我会不知不觉继续往下看。
+          <select name="autopilot" required>
+            <option value="">请选择</option>
+            <option value="1">1 非常不同意</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4 一般</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7 非常同意</option>
+          </select>
+        </label>
+
+        <label>
+          我感到自己能够主动控制浏览节奏。
+          <select name="control" required>
+            <option value="">请选择</option>
+            <option value="1">1 非常不同意</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4 一般</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7 非常同意</option>
+          </select>
+        </label>
+
+        <label>
+          如果现在有另一个平台提供类似内容，我愿意切换过去。
+          <select name="switching" required>
+            <option value="">请选择</option>
+            <option value="1">1 非常不同意</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4 一般</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7 非常同意</option>
+          </select>
+        </label>
+
+        <label>
+          这段浏览时间过得比我预想得更快。
+          <select name="timeDistortion" required>
+            <option value="">请选择</option>
+            <option value="1">1 非常不同意</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4 一般</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7 非常同意</option>
+          </select>
+        </label>
+
+        <label>
+          我觉得这个平台的推荐算法“很强”。
+          <select name="perceivedStrength" required>
+            <option value="">请选择</option>
+            <option value="1">1 非常弱</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4 一般</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7 非常强</option>
+          </select>
+        </label>
+
+        <label>
+          浏览结束后，我感到明显的心理疲劳或注意力消耗。
+          <select name="fatigue" required>
+            <option value="">请选择</option>
+            <option value="1">1 非常不同意</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4 一般</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7 非常同意</option>
+          </select>
+        </label>
+
+        <label>
+          为确认你有认真作答，请在本题选择“5”。
+          <select name="attentionCheck" required>
+            <option value="">请选择</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+          </select>
+        </label>
+
+        <label>
+          在实验过程中，你是否受到他人打断或同时处理其他任务？
+          <select name="interruption" required>
+            <option value="">请选择</option>
+            <option value="no">没有</option>
+            <option value="brief">有轻微打断</option>
+            <option value="clear">有明显打断</option>
+          </select>
+        </label>
+
+        <label>
+          你印象最深的内容主题是什么？
+          <textarea name="memory" rows="3" placeholder="例如：科技、健康、社会议题等" required></textarea>
+        </label>
+
+        <label>
+          你是否感觉自己在浏览过程中逐渐被某类主题吸引？请简要描述。
+          <textarea name="focusPattern" rows="4" placeholder="可描述你更容易停留的内容类型及原因"></textarea>
+        </label>
+
+        <div class="button-row">
+          <button id="submitSurveyButton" type="submit" class="primary-button">提交问卷并结束实验</button>
+        </div>
+      </form>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
